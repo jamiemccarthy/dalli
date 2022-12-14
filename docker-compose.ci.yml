@@ -1,0 +1,20 @@
+version: '3'
+services:
+  memcached:
+    container_name: memcached
+    image: "memcached:${MATRIX_MEMCACHED_VERSION}"
+    ports:
+      - "11211:11211"
+    networks:
+      - ci
+  dalli:
+    container_name: dalli
+    build: .
+    depends_on:
+      - memcached
+    networks:
+      - ci
+
+networks:
+  ci:
+    name: ci
