@@ -6,8 +6,21 @@ services:
     entrypoint:
       - memcached
       - --enable-shutdown
+      - --enable-sasl
     ports:
       - "11211:11211"
+    restart: always
+    networks:
+      - ci
+  memcached2:
+    container_name: memcached2
+    image: "memcached:${MATRIX_MEMCACHED_VERSION}"
+    entrypoint:
+      - memcached
+      - --enable-shutdown
+      - --port=11212
+    ports:
+      - "11212:11212"
     restart: always
     networks:
       - ci
@@ -16,6 +29,7 @@ services:
     build: .
     depends_on:
       - memcached
+      - memcached2
     networks:
       - ci
 
