@@ -74,9 +74,10 @@ describe 'Dalli' do
 
     it 'allow namespace to be a symbol' do
       memcached_persistent do |_, port|
-        dc = Dalli::Client.new("localhost:#{port}", namespace: :wunderschoen)
-        dc.set 'x' * 251, 1
-        assert_equal(1, dc.get(('x' * 251).to_s))
+        memcached_client do |dc|
+          dc.set 'x' * 251, 1
+          assert_equal(1, dc.get(('x' * 251).to_s))
+        end
       end
     end
   end
@@ -489,16 +490,17 @@ describe 'Dalli' do
 
     it 'allow TCP connections to be configured for keepalive' do
       memcached_persistent do |_, port|
-        dc = Dalli::Client.new("localhost:#{port}", keepalive: true)
-        dc.set(:a, 1)
-        ring = dc.send(:ring)
-        server = ring.servers.first
-        socket = server.sock
+        memcached_client do |dc|
+          dc.set(:a, 1)
+          ring = dc.send(:ring)
+          server = ring.servers.first
+          socket = server.sock
 
-        optval = socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE)
-        optval = optval.unpack 'i'
+          optval = socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE)
+          optval = optval.unpack 'i'
 
-        refute_equal(optval[0], 0)
+          refute_equal(optval[0], 0)
+        end
       end
     end
 
@@ -531,28 +533,28 @@ describe 'Dalli' do
         dc.close
         dc = nil
 
-        dc = Dalli::Client.new("localhost:#{port}", digest_class: ::OpenSSL::Digest::SHA1)
+        memcached_client("", digest_class: ::OpenSSL::Digest::SHA1) do |dc|
+          assert op_addset_succeeds(dc.set('456', 'xyz', 0, raw: true))
 
-        assert op_addset_succeeds(dc.set('456', 'xyz', 0, raw: true))
+          resp = dc.prepend '456', '0'
+          assert resp
 
-        resp = dc.prepend '456', '0'
-        assert resp
+          resp = dc.append '456', '9'
+          assert resp
 
-        resp = dc.append '456', '9'
-        assert resp
+          resp = dc.get('456', raw: true)
+          assert_equal '0xyz9', resp
 
-        resp = dc.get('456', raw: true)
-        assert_equal '0xyz9', resp
+          assert op_addset_succeeds(dc.set('456', false))
 
-        assert op_addset_succeeds(dc.set('456', false))
+          resp = dc.get('456')
+          refute resp
 
-        resp = dc.get('456')
-        refute resp
+          resp = dc.stats
+          assert_equal Hash, resp.class
 
-        resp = dc.stats
-        assert_equal Hash, resp.class
-
-        dc.close
+          dc.close
+        end
       end
     end
 

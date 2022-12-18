@@ -22,8 +22,7 @@ describe 'Compressor' do
   end
 
   it 'support a custom compressor' do
-    memcached(29_199) do |_dc|
-      memcache = Dalli::Client.new('127.0.0.1:29199', { compressor: NoopCompressor })
+    memcached(29_199, compressor: NoopCompressor) do |memcache|
       memcache.set 1, 2
       begin
         assert_equal NoopCompressor,
@@ -40,8 +39,7 @@ end
 
 describe 'GzipCompressor' do
   it 'compress and uncompress data using Zlib::GzipWriter/Reader' do
-    memcached(19_127) do |_dc|
-      memcache = Dalli::Client.new('127.0.0.1:19127', { compress: true, compressor: Dalli::GzipCompressor })
+    memcached(19_127, compress: true, compressor: Dalli::GzipCompressor) do |memcache|
       data = (0...1025).map { rand(65..90).chr }.join
       assert memcache.set('test', data)
       assert_equal(data, memcache.get('test'))
