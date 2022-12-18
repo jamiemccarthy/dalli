@@ -3,8 +3,12 @@ services:
   memcached:
     container_name: memcached
     image: "memcached:${MATRIX_MEMCACHED_VERSION}"
+    entrypoint:
+      - memcached
+      - --enable-shutdown
     ports:
       - "11211:11211"
+    restart: always
     networks:
       - ci
   dalli:

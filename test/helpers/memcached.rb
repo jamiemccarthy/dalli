@@ -37,9 +37,9 @@ module Memcached
     # terminate_process - whether to terminate the memcached process on
     #                     exiting the block
     def memcached(port_or_socket, args = '', client_options = {}, terminate_process: true)
-      dc = MemcachedManager.start_and_flush_with_retry(port_or_socket, args, client_options)
-      yield dc, port_or_socket if block_given?
-      memcached_kill(port_or_socket) if terminate_process
+      dc = Dalli::Client.new("memcached:11211", client_options)
+      dc.flush_all if terminate_process
+      yield dc if block_given?
     end
 
     # Launches a memcached process using the memcached method in this module,
@@ -51,27 +51,22 @@ module Memcached
 
     # Launches a persistent memcached process, configured to use SSL
     def memcached_ssl_persistent(port_or_socket = 21_397, &block)
-      CertificateGenerator.generate
-      memcached_persistent(port_or_socket,
-                           CertificateGenerator.ssl_args,
-                           { ssl_context: CertificateGenerator.ssl_context },
-                           &block)
+      raise ArgumentError, "TODO: SASL testing not yet supported"
     end
 
-    # Kills the memcached process that was launched using this helper on hte
-    # specified port_or_socket.
+    # Kills the memcached process by shutting it down
     def memcached_kill(port_or_socket)
-      MemcachedManager.stop(port_or_socket)
+      memcached(port_or_socket) { |dc| dc.shutdown }
     end
 
     # Launches a persistent memcached process, configured to use SASL authentication
     def memcached_sasl_persistent(port_or_socket = 21_398, &block)
-      memcached_persistent(port_or_socket, '-S', sasl_credentials, &block)
+      raise ArgumentError, "TODO: SASL testing not yet supported"
     end
 
     # The SASL credentials used for the test SASL server
     def sasl_credentials
-      { username: 'testuser', password: 'testtest' }
+      raise ArgumentError, "TODO: SASL testing not yet supported"
     end
 
     private
