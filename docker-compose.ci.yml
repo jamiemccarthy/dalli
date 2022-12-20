@@ -1,0 +1,39 @@
+version: '3'
+services:
+  memcached:
+    container_name: memcached
+    image: "memcached:${MATRIX_MEMCACHED_VERSION:-1.6.12}"
+    entrypoint:
+      - memcached
+      - --enable-shutdown
+      - --enable-sasl
+      - --port=21211
+    ports:
+      - "21211:21211"
+    restart: always
+    networks:
+      - ci
+  memcached2:
+    container_name: memcached2
+    image: "memcached:${MATRIX_MEMCACHED_VERSION:-1.6.12}"
+    entrypoint:
+      - memcached
+      - --enable-shutdown
+      - --port=21212
+    ports:
+      - "21212:21212"
+    restart: always
+    networks:
+      - ci
+  dalli:
+    container_name: dalli
+    build: .
+    depends_on:
+      - memcached
+      - memcached2
+    networks:
+      - ci
+
+networks:
+  ci:
+    name: ci

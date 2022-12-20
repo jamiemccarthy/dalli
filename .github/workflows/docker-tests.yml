@@ -1,0 +1,50 @@
+name: Tests
+
+on: [push, pull_request]
+
+env:
+  COMPOSE_FILE: docker-compose.ci.yml
+
+jobs:
+  test:
+    name: CI R ${{ matrix.ruby-version }} M ${{ matrix.memcached-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      matrix:
+        ruby-version: [2.7]
+        memcached-version: ['1.6.12']
+        #ruby-version: [2.5, 2.6, 2.7, '3.0', jruby-9.2, jruby-9.3]
+        #memcached-version: ['1.5.22', '1.6.12']
+
+    steps:
+      - name: Clean up start
+        uses: AutoModality/action-clean@v1
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: docker compose build
+        env:
+          MATRIX_MEMCACHED_VERSION: ${{ matrix.memcached-version }}
+          MATRIX_RUBY_VERSION: ${{ matrix.ruby-version }}
+
+      #- name: Rubocop
+      #  run: docker compose run --rm dalli rubocop --parallel
+      #  env:
+      #    MATRIX_MEMCACHED_VERSION: ${{ matrix.memcached-version }}
+      #    MATRIX_RUBY_VERSION: ${{ matrix.ruby-version }}
+
+      - name: Run tests
+        run: docker compose run --rm dalli bundle exec rake
+        env:
+          # TODO: getting sasl working will require a custom memcached in the dockerfile
+          RUN_SASL_TESTS: 0
+          MATRIX_MEMCACHED_VERSION: ${{ matrix.memcached-version }}
+          MATRIX_RUBY_VERSION: ${{ matrix.ruby-version }}
+
+      - name: Clean up finish
+        run: docker compose down -v --remove-orphans
+        if: always()

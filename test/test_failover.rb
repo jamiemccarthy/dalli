@@ -2,6 +2,10 @@
 
 require_relative 'helper'
 
+# TODO: I think easiest way to test this in docker is to send the "shutdown"
+# command, trusting the docker-compose file's "enable-shutdown" to actually
+# get it to shut down and its "restart: always" to start it back up.
+
 describe 'failover' do
   # Timeouts on JRuby work differently and aren't firing, meaning we're
   # not testing the condition
