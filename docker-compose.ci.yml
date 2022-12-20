@@ -2,25 +2,26 @@ version: '3'
 services:
   memcached:
     container_name: memcached
-    image: "memcached:${MATRIX_MEMCACHED_VERSION}"
+    image: "memcached:${MATRIX_MEMCACHED_VERSION:-1.6.12}"
     entrypoint:
       - memcached
       - --enable-shutdown
       - --enable-sasl
+      - --port=21211
     ports:
-      - "11211:11211"
+      - "21211:21211"
     restart: always
     networks:
       - ci
   memcached2:
     container_name: memcached2
-    image: "memcached:${MATRIX_MEMCACHED_VERSION}"
+    image: "memcached:${MATRIX_MEMCACHED_VERSION:-1.6.12}"
     entrypoint:
       - memcached
       - --enable-shutdown
-      - --port=11212
+      - --port=21212
     ports:
-      - "11212:11212"
+      - "21212:21212"
     restart: always
     networks:
       - ci

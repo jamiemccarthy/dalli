@@ -37,7 +37,7 @@ module Memcached
     # terminate_process - whether to terminate the memcached process on
     #                     exiting the block
     def memcached(port_or_socket, args = '', client_options = {}, terminate_process: true)
-      dc = Dalli::Client.new("memcached:11211", client_options)
+      dc = Dalli::Client.new("memcached:21211", client_options)
       dc.flush_all if terminate_process
       yield dc if block_given?
     end
